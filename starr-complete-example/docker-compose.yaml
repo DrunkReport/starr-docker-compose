@@ -1,0 +1,170 @@
+version: "3.8"
+services:
+
+  gluetun:
+    container_name: gluetun
+    image: qmcgaw/gluetun
+    cap_add:
+      - NET_ADMIN
+    networks:
+      - gluetun_starr
+    ports:
+      - "6969:6969/tcp"
+      - "7878:7878/tcp"
+      - "8080:8080/tcp"
+      - "8181:8181/tcp"
+      - "8686:8686/tcp"
+      - "8787:8787/tcp"
+      - "8989:8989/tcp"
+      - "9696:9696/tcp"
+    volumes:
+      - gluetun_data:/gluetun
+    environment:
+      - VPN_SERVICE_PROVIDER=private internet access
+      - OPENVPN_USER=
+      - OPENVPN_PASSWORD=
+      - SERVER_REGIONS= 
+    restart: always
+
+  qbittorrent:
+    container_name: qbittorrent
+    image: lscr.io/linuxserver/qbittorrent:latest
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - WEBUI_PORT=8181
+    volumes:
+      - /starr/qbittorrent/config:/config
+      - /data/torrents:/data/torrents
+    restart: unless-stopped
+
+  sabnzbd:
+    container_name: sabnzbd
+    image: lscr.io/linuxserver/sabnzbd:latest
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/sabnzbd/config:/config
+    restart: unless-stopped
+
+  prowlarr:
+    container_name: prowlarr
+    image: cr.hotio.dev/hotio/prowlarr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/prowlarr/config:/config
+    restart: unless-stopped
+
+  radarr:
+    container_name: radarr
+    image: cr.hotio.dev/hotio/radarr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/radarr/config:/config
+      - /data/media:/data/media
+    restart: unless-stopped
+
+  lidarr:
+    container_name: lidarr
+    image: cr.hotio.dev/hotio/lidarr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/lidarr/config:/config
+      - /data/media:/data/media
+    restart: unless-stopped
+
+  sonarr:
+    container_name: sonarr
+    image: cr.hotio.dev/hotio/sonarr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/sonarr/config:/config
+      - /data/media:/data/media
+    restart: unless-stopped
+
+  readarr:
+    container_name: readarr
+    image: cr.hotio.dev/hotio/readarr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/readarr/config:/config
+      - /data/media:/data/media
+    restart: unless-stopped
+
+  whisparr:
+    container_name: whisparr
+    image: cr.hotio.dev/hotio/whisparr
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=002
+      - TZ=Europe/Berlin
+    volumes:
+      - /starr/whisparr/config:/config
+      - /data/media:/data/media
+    restart: unless-stopped
+
+
+networks:
+  gluetun_starr:
+    driver: bridge
+    attachable: true
+
+
+volumes:
+  gluetun_data:
